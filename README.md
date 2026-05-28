@@ -28,24 +28,51 @@
                       └───────────┘
 ```
 
-## Quick Start (Git Integration + Workspace)
+## Quick Start
 
-### Step 1: Create Git API Integration & Workspace
-1. Create a Git API Integration connected to this repo
-2. Create a Workspace from the Git repo URL
-3. Open the workspace in Snowsight
+Complete Steps 1 and 2 below and the demo environment will be fully set up and ready to run.
 
-### Step 2: Run sql/TEARDOWN_AND_REBUILD.sql
-Open `sql/TEARDOWN_AND_REBUILD.sql` in the workspace and execute it. This will:
-- Drop existing objects (safe to re-run)
-- Create the database, schema, and warehouse
-- Build all tables and load synthetic data
-- Create analytical views and semantic view
-- Upload and parse PDFs into Cortex Search services
-- Create the email procedure
-- Deploy the agent and register it with Snowflake Intelligence
+### Step 1: Create a Git API Integration & Connect Your Workspace
+
+Before running any scripts, you need a Git API integration so Snowflake can pull from this repo — and a Workspace linked to it so you can browse and run the files.
+
+1. Navigate to **Projects → Workspaces** in Snowsight.
+2. Open a blank SQL file and run the following as `ACCOUNTADMIN`:
+
+```sql
+USE ROLE ACCOUNTADMIN;
+
+CREATE API INTEGRATION IF NOT EXISTS GIT_HUB_INTEGRATION
+  API_PROVIDER = git_https_api
+  API_ALLOWED_PREFIXES = ('https://github.com/')
+  ENABLED = TRUE;
+```
+
+3. At the top of the left-hand file pane, click the **dropdown arrow** next to your current workspace name (likely **My Workspace**).
+4. Select **From Git repository**.
+5. Fill in the form:
+   - **Repository URL:** `https://github.com/sfc-gh-timjones/c_ymc`
+   - **Workspace name:** e.g. `YMC Demo`
+   - **API integration:** select `GIT_HUB_INTEGRATION` (the one you just created)
+
+   > If `GIT_HUB_INTEGRATION` doesn't appear in the dropdown, log out and log back in — since it was just created, Snowsight may not have picked it up yet.
+
+   - **Repository access:** select **Public repository**
+
+   > Note: public repositories are read-only — you will not be able to push changes from this Workspace.
+
+6. Click **Create**.
+
+Your Workspace is now connected to the repo and all scripts are accessible in the left pane.
+
+### Step 2: Deploy the Demo Environment
+
+| Script | What it does |
+|--------|--------------|
+| sql/TEARDOWN_AND_REBUILD.sql | Run this next. Tears down any existing objects, runs all setup scripts in order. After this, the demo environment is ready. |
 
 ### Step 3: Access the Agent in Snowflake Intelligence
+
 Navigate to **Snowflake Intelligence** in the left nav → Select **YMC Assistant**.
 
 ## Objects Created
