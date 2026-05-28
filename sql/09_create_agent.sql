@@ -9,7 +9,7 @@ CREATE OR REPLACE AGENT CUSTOMER_DEMOS.YMC.YMC_AGENT
   FROM SPECIFICATION
   $$
   models:
-    orchestration: claude-sonnet-4.6
+    orchestration: claude-sonnet-4-6
 
   orchestration:
     budget:
