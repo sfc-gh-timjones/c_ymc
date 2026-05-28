@@ -155,11 +155,14 @@ SELECT
         WHEN 4 THEN 'Frozen' WHEN 5 THEN 'Frozen'
         ELSE 'Active'
     END AS STATUS,
-    CASE UNIFORM(1, 7, RANDOM())
-        WHEN 1 THEN 'Youth (5-12)' WHEN 2 THEN 'Teen (13-17)'
-        WHEN 3 THEN 'Young Adult (18-25)' WHEN 4 THEN 'Adult (26-44)'
-        WHEN 5 THEN 'Adult (45-63)' WHEN 6 THEN 'Senior (64+)'
-        ELSE 'Adult (26-44)'
+    -- Biased: Adults dominate YMCA membership; Youth/Seniors less common
+    CASE
+        WHEN UNIFORM(1, 100, RANDOM()) <= 35 THEN 'Adult (26-44)'
+        WHEN UNIFORM(1, 100, RANDOM()) <= 55 THEN 'Adult (45-63)'
+        WHEN UNIFORM(1, 100, RANDOM()) <= 70 THEN 'Senior (64+)'
+        WHEN UNIFORM(1, 100, RANDOM()) <= 83 THEN 'Young Adult (18-25)'
+        WHEN UNIFORM(1, 100, RANDOM()) <= 93 THEN 'Youth (5-12)'
+        ELSE 'Teen (13-17)'
     END AS AGE_GROUP,
     CASE UNIFORM(1, 4, RANDOM())
         WHEN 1 THEN 'Male' WHEN 2 THEN 'Female' WHEN 3 THEN 'Non-binary'
@@ -168,42 +171,90 @@ SELECT
 FROM TABLE(GENERATOR(ROWCOUNT => 500000));
 
 -- LEADS (500,000 rows) — FK to BRANCHES (1-20)
+-- CTE so source roll feeds both SOURCE and conversion probability
 INSERT INTO LEADS (FIRST_NAME, LAST_NAME, EMAIL, SOURCE, BRANCH_ID, CREATED_DATE, STATUS, IS_CONVERTED, CONVERTED_DATE)
+WITH base AS (
+    SELECT
+        SEQ4()                        AS seq_num,
+        UNIFORM(1, 100, RANDOM())     AS src_roll,
+        UNIFORM(1, 100, RANDOM())     AS conv_roll,
+        UNIFORM(1, 15, RANDOM())      AS fname_roll,
+        UNIFORM(1, 15, RANDOM())      AS lname_roll,
+        UNIFORM(1, 20, RANDOM())      AS branch_roll,
+        DATEADD('day', -UNIFORM(1, 730, RANDOM()), CURRENT_DATE()) AS created_dt
+    FROM TABLE(GENERATOR(ROWCOUNT => 500000))
+),
+enriched AS (
+    SELECT *,
+        -- Biased source distribution
+        CASE
+            WHEN src_roll <= 28 THEN 'Website'
+            WHEN src_roll <= 48 THEN 'Walk-In'
+            WHEN src_roll <= 63 THEN 'Referral'
+            WHEN src_roll <= 75 THEN 'Social Media'
+            WHEN src_roll <= 84 THEN 'Community Event'
+            WHEN src_roll <= 91 THEN 'Google Ads'
+            WHEN src_roll <= 96 THEN 'Corporate Partner'
+            ELSE 'Email Campaign'
+        END AS source_val
+    FROM base
+)
 SELECT
-    CASE UNIFORM(1, 15, RANDOM())
+    CASE fname_roll
         WHEN 1 THEN 'Taylor' WHEN 2 THEN 'Jordan' WHEN 3 THEN 'Casey'
         WHEN 4 THEN 'Morgan' WHEN 5 THEN 'Riley' WHEN 6 THEN 'Avery'
         WHEN 7 THEN 'Quinn' WHEN 8 THEN 'Parker' WHEN 9 THEN 'Cameron'
         WHEN 10 THEN 'Dakota' WHEN 11 THEN 'Reese' WHEN 12 THEN 'Harper'
         WHEN 13 THEN 'Finley' WHEN 14 THEN 'Sage' ELSE 'Emerson'
     END AS FIRST_NAME,
-    CASE UNIFORM(1, 15, RANDOM())
+    CASE lname_roll
         WHEN 1 THEN 'Rivera' WHEN 2 THEN 'Campbell' WHEN 3 THEN 'Mitchell'
         WHEN 4 THEN 'Roberts' WHEN 5 THEN 'Carter' WHEN 6 THEN 'Phillips'
         WHEN 7 THEN 'Evans' WHEN 8 THEN 'Turner' WHEN 9 THEN 'Torres'
         WHEN 10 THEN 'Parker' WHEN 11 THEN 'Collins' WHEN 12 THEN 'Edwards'
         WHEN 13 THEN 'Stewart' WHEN 14 THEN 'Flores' ELSE 'Morris'
     END AS LAST_NAME,
-    'lead' || SEQ4() || '@email.com' AS EMAIL,
-    CASE UNIFORM(1, 8, RANDOM())
-        WHEN 1 THEN 'Website' WHEN 2 THEN 'Walk-In' WHEN 3 THEN 'Referral'
-        WHEN 4 THEN 'Social Media' WHEN 5 THEN 'Community Event'
-        WHEN 6 THEN 'Corporate Partner' WHEN 7 THEN 'Google Ads'
-        ELSE 'Email Campaign'
-    END AS SOURCE,
-    UNIFORM(1, 20, RANDOM()) AS BRANCH_ID,
-    DATEADD('day', -UNIFORM(1, 365, RANDOM()), CURRENT_DATE()) AS CREATED_DATE,
+    'lead' || seq_num || '@email.com' AS EMAIL,
+    source_val AS SOURCE,
+    branch_roll AS BRANCH_ID,
+    created_dt AS CREATED_DATE,
     CASE UNIFORM(1, 6, RANDOM())
         WHEN 1 THEN 'New' WHEN 2 THEN 'Contacted'
         WHEN 3 THEN 'Qualified' WHEN 4 THEN 'Tour Scheduled'
         WHEN 5 THEN 'Converted' ELSE 'Lost'
     END AS STATUS,
-    CASE WHEN UNIFORM(1, 6, RANDOM()) = 5 THEN TRUE ELSE FALSE END AS IS_CONVERTED,
-    CASE WHEN UNIFORM(1, 6, RANDOM()) = 5
-         THEN DATEADD('day', UNIFORM(3, 30, RANDOM()), DATEADD('day', -UNIFORM(1, 365, RANDOM()), CURRENT_DATE()))
-         ELSE NULL
+    -- Conversion rate varies meaningfully by source
+    CASE
+        WHEN source_val = 'Referral'         AND conv_roll <= 40 THEN TRUE
+        WHEN source_val = 'Walk-In'          AND conv_roll <= 35 THEN TRUE
+        WHEN source_val = 'Community Event'  AND conv_roll <= 28 THEN TRUE
+        WHEN source_val = 'Corporate Partner' AND conv_roll <= 25 THEN TRUE
+        WHEN source_val = 'Website'          AND conv_roll <= 22 THEN TRUE
+        WHEN source_val = 'Email Campaign'   AND conv_roll <= 18 THEN TRUE
+        WHEN source_val = 'Google Ads'       AND conv_roll <= 14 THEN TRUE
+        WHEN source_val = 'Social Media'     AND conv_roll <= 10 THEN TRUE
+        ELSE FALSE
+    END AS IS_CONVERTED,
+    CASE
+        WHEN source_val = 'Referral'         AND conv_roll <= 40
+          THEN DATEADD('day', UNIFORM(3, 21, RANDOM()), created_dt)
+        WHEN source_val = 'Walk-In'          AND conv_roll <= 35
+          THEN DATEADD('day', UNIFORM(1, 14, RANDOM()), created_dt)
+        WHEN source_val = 'Community Event'  AND conv_roll <= 28
+          THEN DATEADD('day', UNIFORM(7, 30, RANDOM()), created_dt)
+        WHEN source_val = 'Corporate Partner' AND conv_roll <= 25
+          THEN DATEADD('day', UNIFORM(14, 45, RANDOM()), created_dt)
+        WHEN source_val = 'Website'          AND conv_roll <= 22
+          THEN DATEADD('day', UNIFORM(3, 30, RANDOM()), created_dt)
+        WHEN source_val = 'Email Campaign'   AND conv_roll <= 18
+          THEN DATEADD('day', UNIFORM(5, 30, RANDOM()), created_dt)
+        WHEN source_val = 'Google Ads'       AND conv_roll <= 14
+          THEN DATEADD('day', UNIFORM(3, 21, RANDOM()), created_dt)
+        WHEN source_val = 'Social Media'     AND conv_roll <= 10
+          THEN DATEADD('day', UNIFORM(7, 45, RANDOM()), created_dt)
+        ELSE NULL
     END AS CONVERTED_DATE
-FROM TABLE(GENERATOR(ROWCOUNT => 500000));
+FROM enriched;
 
 -- CHILDCARE_PROGRAMS (200 rows) — FK to BRANCHES (1-20)
 INSERT INTO CHILDCARE_PROGRAMS (PROGRAM_NAME, PROGRAM_TYPE, BRANCH_ID, CAPACITY, CURRENT_ENROLLMENT, AGE_MIN_MONTHS, AGE_MAX_MONTHS, MONTHLY_FEE, SUBSIDY_ACCEPTED, STATUS)
@@ -279,19 +330,32 @@ SELECT
 FROM TABLE(GENERATOR(ROWCOUNT => 1000000));
 
 -- IT_TICKETS (1,500,000 rows) — FK to EMPLOYEES (1-6000), BRANCHES (1-20)
+-- CTE assigns category/priority rolls first so resolution time and satisfaction can be correlated
 INSERT INTO IT_TICKETS (TICKET_NUMBER, SUBJECT, CATEGORY, SUBCATEGORY, PRIORITY, STATUS, CREATED_DATE, RESOLVED_DATE, EMPLOYEE_ID, BRANCH_ID, ASSIGNED_TECHNICIAN, RESOLUTION_HOURS, SATISFACTION_SCORE)
+WITH base AS (
+    SELECT
+        SEQ4()                          AS seq_num,
+        UNIFORM(1, 100, RANDOM())       AS cat_roll,      -- biased category distribution
+        UNIFORM(1, 100, RANDOM())       AS pri_roll,      -- priority distribution
+        UNIFORM(1, 10,  RANDOM())       AS status_roll,
+        UNIFORM(1, 5,   RANDOM())       AS subcat_roll,
+        UNIFORM(1, 20,  RANDOM())       AS subject_roll,
+        UNIFORM(1, 6,   RANDOM())       AS tech_roll,
+        DATEADD('hour', -UNIFORM(1, 17520, RANDOM()), CURRENT_TIMESTAMP()) AS created_ts
+    FROM TABLE(GENERATOR(ROWCOUNT => 1500000))
+)
 SELECT
-    'TKT-' || LPAD(SEQ4()::VARCHAR, 7, '0') AS TICKET_NUMBER,
-    CASE UNIFORM(1, 20, RANDOM())
-        WHEN 1 THEN 'Cannot connect to WiFi'
-        WHEN 2 THEN 'Salesforce login error'
-        WHEN 3 THEN 'Printer not responding'
-        WHEN 4 THEN 'Password reset request'
-        WHEN 5 THEN 'VPN connection dropping'
-        WHEN 6 THEN 'Email not syncing on mobile'
-        WHEN 7 THEN 'New laptop setup needed'
-        WHEN 8 THEN 'Software installation request'
-        WHEN 9 THEN 'Monitor flickering'
+    'TKT-' || LPAD(seq_num::VARCHAR, 7, '0') AS TICKET_NUMBER,
+    CASE subject_roll
+        WHEN 1  THEN 'Cannot connect to WiFi'
+        WHEN 2  THEN 'Salesforce login error'
+        WHEN 3  THEN 'Printer not responding'
+        WHEN 4  THEN 'Password reset request'
+        WHEN 5  THEN 'VPN connection dropping'
+        WHEN 6  THEN 'Email not syncing on mobile'
+        WHEN 7  THEN 'New laptop setup needed'
+        WHEN 8  THEN 'Software installation request'
+        WHEN 9  THEN 'Monitor flickering'
         WHEN 10 THEN 'Zoom audio not working'
         WHEN 11 THEN 'Shared drive access request'
         WHEN 12 THEN 'Computer running slow'
@@ -304,56 +368,80 @@ SELECT
         WHEN 19 THEN 'Projector in conference room broken'
         ELSE 'Application crashing repeatedly'
     END AS SUBJECT,
-    CASE UNIFORM(1, 10, RANDOM())
-        WHEN 1 THEN 'Network/Connectivity'
-        WHEN 2 THEN 'Software/Applications'
-        WHEN 3 THEN 'Hardware'
-        WHEN 4 THEN 'Account Access'
-        WHEN 5 THEN 'Email/Calendar'
-        WHEN 6 THEN 'Printer/Copier'
-        WHEN 7 THEN 'Security'
-        WHEN 8 THEN 'VPN/Remote Access'
-        WHEN 9 THEN 'Phone/Video Conferencing'
-        ELSE 'Database/Reporting'
+    -- Biased distribution: Account Access and Software most common, Security rare
+    CASE
+        WHEN cat_roll <= 22 THEN 'Account Access'
+        WHEN cat_roll <= 42 THEN 'Software/Applications'
+        WHEN cat_roll <= 55 THEN 'Network/Connectivity'
+        WHEN cat_roll <= 65 THEN 'Email/Calendar'
+        WHEN cat_roll <= 73 THEN 'Hardware'
+        WHEN cat_roll <= 81 THEN 'VPN/Remote Access'
+        WHEN cat_roll <= 88 THEN 'Printer/Copier'
+        WHEN cat_roll <= 93 THEN 'Phone/Video Conferencing'
+        WHEN cat_roll <= 97 THEN 'Database/Reporting'
+        ELSE 'Security'
     END AS CATEGORY,
-    CASE UNIFORM(1, 5, RANDOM())
+    CASE subcat_roll
         WHEN 1 THEN 'Configuration' WHEN 2 THEN 'Troubleshooting'
-        WHEN 3 THEN 'Installation' WHEN 4 THEN 'Access Request'
+        WHEN 3 THEN 'Installation'  WHEN 4 THEN 'Access Request'
         ELSE 'Replacement'
     END AS SUBCATEGORY,
-    CASE UNIFORM(1, 10, RANDOM())
-        WHEN 1 THEN 'P1' WHEN 2 THEN 'P2' WHEN 3 THEN 'P2'
-        WHEN 4 THEN 'P3' WHEN 5 THEN 'P3' WHEN 6 THEN 'P3'
-        WHEN 7 THEN 'P3' WHEN 8 THEN 'P4' WHEN 9 THEN 'P4'
+    -- Realistic priority skew: most tickets are P3/P4
+    CASE
+        WHEN pri_roll <= 5  THEN 'P1'
+        WHEN pri_roll <= 20 THEN 'P2'
+        WHEN pri_roll <= 65 THEN 'P3'
         ELSE 'P4'
     END AS PRIORITY,
-    CASE UNIFORM(1, 10, RANDOM())
-        WHEN 1 THEN 'Open' WHEN 2 THEN 'Open' WHEN 3 THEN 'In Progress'
-        WHEN 4 THEN 'In Progress' WHEN 5 THEN 'Awaiting User'
-        WHEN 6 THEN 'Resolved' WHEN 7 THEN 'Resolved' WHEN 8 THEN 'Resolved'
-        WHEN 9 THEN 'Resolved' ELSE 'Closed'
+    CASE status_roll
+        WHEN 1  THEN 'Open' WHEN 2 THEN 'Open' WHEN 3 THEN 'In Progress'
+        WHEN 4  THEN 'In Progress' WHEN 5 THEN 'Awaiting User'
+        WHEN 6  THEN 'Resolved' WHEN 7 THEN 'Resolved' WHEN 8 THEN 'Resolved'
+        WHEN 9  THEN 'Resolved' ELSE 'Closed'
     END AS STATUS,
-    DATEADD('hour', -UNIFORM(1, 4380, RANDOM()), CURRENT_TIMESTAMP()) AS CREATED_DATE,
-    CASE WHEN UNIFORM(1, 10, RANDOM()) >= 6
-         THEN DATEADD('hour', UNIFORM(1, 72, RANDOM()), DATEADD('hour', -UNIFORM(1, 4380, RANDOM()), CURRENT_TIMESTAMP()))
+    created_ts AS CREATED_DATE,
+    CASE WHEN status_roll >= 6
+         THEN DATEADD('hour', UNIFORM(1, 48, RANDOM()), created_ts)
          ELSE NULL
     END AS RESOLVED_DATE,
     UNIFORM(1, 6000, RANDOM()) AS EMPLOYEE_ID,
-    UNIFORM(1, 20, RANDOM()) AS BRANCH_ID,
-    CASE UNIFORM(1, 6, RANDOM())
+    UNIFORM(1, 20,   RANDOM()) AS BRANCH_ID,
+    CASE tech_roll
         WHEN 1 THEN 'Alex Torres' WHEN 2 THEN 'Sam Patel'
         WHEN 3 THEN 'Jordan Rivera' WHEN 4 THEN 'Casey Kim'
         WHEN 5 THEN 'Morgan Chen' ELSE 'Taylor Brooks'
     END AS ASSIGNED_TECHNICIAN,
-    CASE WHEN UNIFORM(1, 10, RANDOM()) >= 6
-         THEN ROUND(UNIFORM(1, 72, RANDOM()) + UNIFORM(0, 100, RANDOM()) / 100.0, 2)
-         ELSE NULL
-    END AS RESOLUTION_HOURS,
-    CASE WHEN UNIFORM(1, 10, RANDOM()) >= 6
-         THEN UNIFORM(1, 5, RANDOM())
-         ELSE NULL
-    END AS SATISFACTION_SCORE
-FROM TABLE(GENERATOR(ROWCOUNT => 1500000));
+    -- Resolution hours vary meaningfully by category — this is the key fix
+    CASE WHEN status_roll >= 6 THEN
+        ROUND(CASE
+            WHEN cat_roll <= 22 THEN UNIFORM(0.5, 3.0,  RANDOM())  -- Account Access: 0.5-3h (avg ~1.75h)
+            WHEN cat_roll <= 42 THEN UNIFORM(1.0, 8.0,  RANDOM())  -- Software: 1-8h (avg ~4.5h)
+            WHEN cat_roll <= 55 THEN UNIFORM(3.0, 18.0, RANDOM())  -- Network: 3-18h (avg ~10.5h)
+            WHEN cat_roll <= 65 THEN UNIFORM(1.0, 6.0,  RANDOM())  -- Email: 1-6h (avg ~3.5h)
+            WHEN cat_roll <= 73 THEN UNIFORM(24.0, 96.0, RANDOM()) -- Hardware: 24-96h (avg ~60h) — needs parts
+            WHEN cat_roll <= 81 THEN UNIFORM(0.5, 4.0,  RANDOM())  -- VPN: 0.5-4h (avg ~2.25h)
+            WHEN cat_roll <= 88 THEN UNIFORM(4.0, 24.0, RANDOM())  -- Printer: 4-24h (avg ~14h)
+            WHEN cat_roll <= 93 THEN UNIFORM(0.5, 5.0,  RANDOM())  -- Phone/Video: 0.5-5h (avg ~2.75h)
+            WHEN cat_roll <= 97 THEN UNIFORM(4.0, 20.0, RANDOM())  -- Database: 4-20h (avg ~12h)
+            ELSE                     UNIFORM(12.0, 72.0, RANDOM()) -- Security: 12-72h (avg ~42h) — investigation
+        END, 2)
+    ELSE NULL END AS RESOLUTION_HOURS,
+    -- Satisfaction inversely correlated with resolution time
+    CASE WHEN status_roll >= 6 THEN
+        CASE
+            WHEN cat_roll <= 22 THEN UNIFORM(4, 5, RANDOM())  -- Account Access: mostly 4-5
+            WHEN cat_roll <= 42 THEN UNIFORM(3, 5, RANDOM())  -- Software: 3-5
+            WHEN cat_roll <= 55 THEN UNIFORM(3, 5, RANDOM())  -- Network: 3-5
+            WHEN cat_roll <= 65 THEN UNIFORM(3, 5, RANDOM())  -- Email: 3-5
+            WHEN cat_roll <= 73 THEN UNIFORM(2, 4, RANDOM())  -- Hardware: 2-4 (slow = unhappy)
+            WHEN cat_roll <= 81 THEN UNIFORM(4, 5, RANDOM())  -- VPN: 4-5
+            WHEN cat_roll <= 88 THEN UNIFORM(2, 4, RANDOM())  -- Printer: 2-4
+            WHEN cat_roll <= 93 THEN UNIFORM(3, 5, RANDOM())  -- Phone/Video: 3-5
+            WHEN cat_roll <= 97 THEN UNIFORM(3, 4, RANDOM())  -- Database: 3-4
+            ELSE                     UNIFORM(1, 3, RANDOM())  -- Security: 1-3 (stressful incident)
+        END
+    ELSE NULL END AS SATISFACTION_SCORE
+FROM base;
 
 -- ONBOARDING_TASKS (120,000 rows) — FK to EMPLOYEES (1-6000)
 INSERT INTO ONBOARDING_TASKS (EMPLOYEE_ID, TASK_NAME, CATEGORY, DUE_DATE, COMPLETED_DATE, STATUS)
