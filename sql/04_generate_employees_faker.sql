@@ -12,6 +12,10 @@ USE WAREHOUSE YMC_WH;
 --   - Faker produces thousands of distinct realistic names (not 20 cycling)
 --   - numpy enables non-uniform distributions (employment mix, pay skew)
 --   - Reads actual parent PKs from DEPARTMENTS/BRANCHES — zero FK orphans
+--
+-- ORDERING NOTE: This script MUST run AFTER 03_generate_synthetic_data.sql.
+-- DEPARTMENTS and BRANCHES must have rows before this proc executes, because
+-- np.random.choice(dept_ids) throws ValueError on an empty list.
 -- =============================================================================
 
 CREATE OR REPLACE PROCEDURE YMC_GENERATE_EMPLOYEES(ROW_COUNT INT)
