@@ -50,6 +50,7 @@ EXECUTE IMMEDIATE FROM @YMC_DEPLOY.GIT.C_YMC_REPO/branches/master/sql/99-teardow
 
 EXECUTE IMMEDIATE FROM @YMC_DEPLOY.GIT.C_YMC_REPO/branches/master/sql/setup/01_database_and_schema.sql;
 EXECUTE IMMEDIATE FROM @YMC_DEPLOY.GIT.C_YMC_REPO/branches/master/sql/setup/02_create_tables.sql;
+EXECUTE IMMEDIATE FROM @YMC_DEPLOY.GIT.C_YMC_REPO/branches/master/sql/data/03_generate_faker_data.sql;
 EXECUTE IMMEDIATE FROM @YMC_DEPLOY.GIT.C_YMC_REPO/branches/master/sql/data/03_generate_synthetic_data.sql;
 EXECUTE IMMEDIATE FROM @YMC_DEPLOY.GIT.C_YMC_REPO/branches/master/sql/views/04_create_views.sql;
 EXECUTE IMMEDIATE FROM @YMC_DEPLOY.GIT.C_YMC_REPO/branches/master/sql/views/05_create_semantic_view.sql;
