@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YMC Entity Relationship Diagram</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; padding: 20px; min-height: 100vh; }
+        h1 { text-align: center; margin-bottom: 10px; color: #29b5e8; font-size: 1.8em; }
+        .subtitle { text-align: center; color: #888; margin-bottom: 30px; font-size: 0.9em; }
+        .erd-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; max-width: 1400px; margin: 0 auto; }
+        .table-card { background: #16213e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
+        .table-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(41, 181, 232, 0.2); }
+        .table-header { background: #0f3460; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+        .table-name { font-weight: 700; color: #29b5e8; font-size: 0.85em; }
+        .row-count { background: #29b5e8; color: #1a1a2e; padding: 2px 8px; border-radius: 10px; font-size: 0.7em; font-weight: 700; }
+        .source-badge { font-size: 0.65em; color: #888; margin-top: 2px; }
+        .columns { padding: 10px 16px; }
+        .column { display: flex; align-items: center; padding: 3px 0; font-size: 0.75em; border-bottom: 1px solid #0f3460; }
+        .column:last-child { border-bottom: none; }
+        .col-icon { width: 16px; margin-right: 8px; font-size: 0.7em; }
+        .pk { color: #f7b731; }
+        .fk { color: #fc5c65; }
+        .dim { color: #a8e6cf; }
+        .col-name { flex: 1; }
+        .col-type { color: #666; font-size: 0.9em; }
+        .legend { display: flex; gap: 20px; justify-content: center; margin-top: 30px; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.8em; color: #888; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .relationships { max-width: 1400px; margin: 30px auto 0; background: #16213e; border-radius: 8px; padding: 20px; border: 1px solid #0f3460; }
+        .relationships h2 { color: #29b5e8; font-size: 1em; margin-bottom: 10px; }
+        .rel-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .rel-item { font-size: 0.75em; color: #ccc; padding: 4px 0; }
+        .rel-item .arrow { color: #fc5c65; margin: 0 6px; }
+        @media (max-width: 1200px) { .erd-container { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 900px) { .erd-container { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+</head>
+<body>
+    <h1>CUSTOMER_DEMOS.YMC — Entity Relationship Diagram</h1>
+    <p class="subtitle">YMCA of San Diego County | 10 Tables | 4 Source Systems</p>
+
+    <div class="erd-container">
+        <div class="table-card">
+            <div class="table-header">
+                <div><div class="table-name">BRANCHES</div><div class="source-badge">Salesforce</div></div>
+                <span class="row-count">20 rows</span>
+            </div>
+            <div class="columns">
+                <div class="column"><span class="col-icon pk">PK</span><span class="col-name">BRANCH_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">BRANCH_NAME</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">CITY</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">REGION</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">DIRECTOR_NAME</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">PHONE</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">ADDRESS</span><span class="col-type">VARCHAR</span></div>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="table-header">
+                <div><div class="table-name">MEMBERSHIP_TYPES</div><div class="source-badge">Salesforce</div></div>
+                <span class="row-count">8 rows</span>
+            </div>
+            <div class="columns">
+                <div class="column"><span class="col-icon pk">PK</span><span class="col-name">MEMBERSHIP_TYPE_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">TYPE_NAME</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">CATEGORY</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">MONTHLY_FEE</span><span class="col-type">NUMBER</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">ANNUAL_FEE</span><span class="col-type">NUMBER</span></div>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="table-header">
+                <div><div class="table-name">DEPARTMENTS</div><div class="source-badge">HR</div></div>
+                <span class="row-count">15 rows</span>
+            </div>
+            <div class="columns">
+                <div class="column"><span class="col-icon pk">PK</span><span class="col-name">DEPARTMENT_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">DEPARTMENT_NAME</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">DIVISION</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">COST_CENTER</span><span class="col-type">VARCHAR</span></div>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="table-header">
+                <div><div class="table-name">EMPLOYEES</div><div class="source-badge">HR</div></div>
+                <span class="row-count">500 rows</span>
+            </div>
+            <div class="columns">
+                <div class="column"><span class="col-icon pk">PK</span><span class="col-name">EMPLOYEE_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">FIRST_NAME</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">LAST_NAME</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">EMAIL</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon fk">FK</span><span class="col-name">DEPARTMENT_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon fk">FK</span><span class="col-name">BRANCH_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">POSITION_TITLE</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">EMPLOYMENT_TYPE</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">HIRE_DATE</span><span class="col-type">DATE</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">STATUS</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">HOURLY_RATE</span><span class="col-type">NUMBER</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">MANAGER_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">IS_ACTIVE</span><span class="col-type">BOOLEAN</span></div>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="table-header">
+                <div><div class="table-name">MEMBERS</div><div class="source-badge">Salesforce</div></div>
+                <span class="row-count">800 rows</span>
+            </div>
+            <div class="columns">
+                <div class="column"><span class="col-icon pk">PK</span><span class="col-name">MEMBER_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">FIRST_NAME</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">LAST_NAME</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">EMAIL</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon fk">FK</span><span class="col-name">BRANCH_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon fk">FK</span><span class="col-name">MEMBERSHIP_TYPE_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">JOIN_DATE</span><span class="col-type">DATE</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">STATUS</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">AGE_GROUP</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">GENDER</span><span class="col-type">VARCHAR</span></div>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="table-header">
+                <div><div class="table-name">LEADS</div><div class="source-badge">Salesforce</div></div>
+                <span class="row-count">300 rows</span>
+            </div>
+            <div class="columns">
+                <div class="column"><span class="col-icon pk">PK</span><span class="col-name">LEAD_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">FIRST_NAME</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">LAST_NAME</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">EMAIL</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">SOURCE</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon fk">FK</span><span class="col-name">BRANCH_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">CREATED_DATE</span><span class="col-type">DATE</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">STATUS</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">IS_CONVERTED</span><span class="col-type">BOOLEAN</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">CONVERTED_DATE</span><span class="col-type">DATE</span></div>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="table-header">
+                <div><div class="table-name">CHILDCARE_PROGRAMS</div><div class="source-badge">Childcare System</div></div>
+                <span class="row-count">40 rows</span>
+            </div>
+            <div class="columns">
+                <div class="column"><span class="col-icon pk">PK</span><span class="col-name">PROGRAM_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">PROGRAM_NAME</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">PROGRAM_TYPE</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon fk">FK</span><span class="col-name">BRANCH_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">CAPACITY</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">CURRENT_ENROLLMENT</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">AGE_MIN/MAX_MONTHS</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">MONTHLY_FEE</span><span class="col-type">NUMBER</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">SUBSIDY_ACCEPTED</span><span class="col-type">BOOLEAN</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">STATUS</span><span class="col-type">VARCHAR</span></div>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="table-header">
+                <div><div class="table-name">CHILDCARE_ENROLLMENTS</div><div class="source-badge">Childcare System</div></div>
+                <span class="row-count">600 rows</span>
+            </div>
+            <div class="columns">
+                <div class="column"><span class="col-icon pk">PK</span><span class="col-name">ENROLLMENT_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon fk">FK</span><span class="col-name">PROGRAM_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">CHILD_FIRST_NAME</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">CHILD_LAST_NAME</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">PARENT_NAME</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">ENROLLMENT_DATE</span><span class="col-type">DATE</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">STATUS</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">SUBSIDY_ELIGIBLE</span><span class="col-type">BOOLEAN</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">SUBSIDY_AMOUNT</span><span class="col-type">NUMBER</span></div>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="table-header">
+                <div><div class="table-name">IT_TICKETS</div><div class="source-badge">Zoho Service Desk</div></div>
+                <span class="row-count">500 rows</span>
+            </div>
+            <div class="columns">
+                <div class="column"><span class="col-icon pk">PK</span><span class="col-name">TICKET_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">TICKET_NUMBER</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">SUBJECT</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">CATEGORY</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">PRIORITY</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">STATUS</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">CREATED_DATE</span><span class="col-type">TIMESTAMP</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">RESOLVED_DATE</span><span class="col-type">TIMESTAMP</span></div>
+                <div class="column"><span class="col-icon fk">FK</span><span class="col-name">EMPLOYEE_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon fk">FK</span><span class="col-name">BRANCH_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">ASSIGNED_TECHNICIAN</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">RESOLUTION_HOURS</span><span class="col-type">NUMBER</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">SATISFACTION_SCORE</span><span class="col-type">INT</span></div>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="table-header">
+                <div><div class="table-name">ONBOARDING_TASKS</div><div class="source-badge">HR</div></div>
+                <span class="row-count">1000 rows</span>
+            </div>
+            <div class="columns">
+                <div class="column"><span class="col-icon pk">PK</span><span class="col-name">TASK_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon fk">FK</span><span class="col-name">EMPLOYEE_ID</span><span class="col-type">INT</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">TASK_NAME</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">CATEGORY</span><span class="col-type">VARCHAR</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">DUE_DATE</span><span class="col-type">DATE</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">COMPLETED_DATE</span><span class="col-type">DATE</span></div>
+                <div class="column"><span class="col-icon dim">●</span><span class="col-name">STATUS</span><span class="col-type">VARCHAR</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#f7b731"></div>Primary Key</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#fc5c65"></div>Foreign Key</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#a8e6cf"></div>Dimension/Fact</div>
+    </div>
+
+    <div class="relationships">
+        <h2>Relationships</h2>
+        <div class="rel-list">
+            <div class="rel-item">EMPLOYEES.BRANCH_ID <span class="arrow">→</span> BRANCHES.BRANCH_ID</div>
+            <div class="rel-item">EMPLOYEES.DEPARTMENT_ID <span class="arrow">→</span> DEPARTMENTS.DEPARTMENT_ID</div>
+            <div class="rel-item">MEMBERS.BRANCH_ID <span class="arrow">→</span> BRANCHES.BRANCH_ID</div>
+            <div class="rel-item">MEMBERS.MEMBERSHIP_TYPE_ID <span class="arrow">→</span> MEMBERSHIP_TYPES.MEMBERSHIP_TYPE_ID</div>
+            <div class="rel-item">LEADS.BRANCH_ID <span class="arrow">→</span> BRANCHES.BRANCH_ID</div>
+            <div class="rel-item">CHILDCARE_PROGRAMS.BRANCH_ID <span class="arrow">→</span> BRANCHES.BRANCH_ID</div>
+            <div class="rel-item">CHILDCARE_ENROLLMENTS.PROGRAM_ID <span class="arrow">→</span> CHILDCARE_PROGRAMS.PROGRAM_ID</div>
+            <div class="rel-item">IT_TICKETS.EMPLOYEE_ID <span class="arrow">→</span> EMPLOYEES.EMPLOYEE_ID</div>
+            <div class="rel-item">IT_TICKETS.BRANCH_ID <span class="arrow">→</span> BRANCHES.BRANCH_ID</div>
+            <div class="rel-item">ONBOARDING_TASKS.EMPLOYEE_ID <span class="arrow">→</span> EMPLOYEES.EMPLOYEE_ID</div>
+        </div>
+    </div>
+</body>
+</html>
