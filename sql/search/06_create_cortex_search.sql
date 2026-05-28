@@ -20,31 +20,9 @@ CREATE OR REPLACE STAGE YMC_SOP_DOCS_STAGE
   ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE');
 
 -- =============================================================================
--- UPLOAD PDFs (run from SnowSQL or Snowsight)
--- HR: Employee handbooks
--- IT: Salesforce guide, Microsoft 365 guide, Zoho Desk guide
--- SOP: Aquatics safety plan, camp info packet, team events SOP
+-- NOTE: PDFs must be uploaded to these stages BEFORE this script runs.
+-- Run sql/search/00_upload_pdfs.sql first (PUT commands — SnowSQL or CoCo tool).
 -- =============================================================================
-
--- HR Policy documents
-PUT file:///Users/timjones/projects/coco/ymca_demo/pdfs/2025 Employee Handbook.pdf @YMC_HR_DOCS_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
-PUT file:///Users/timjones/projects/coco/ymca_demo/pdfs/2024-Employee-Handbook-REV-12.27.23.pdf @YMC_HR_DOCS_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
-PUT file:///Users/timjones/projects/coco/ymca_demo/pdfs/YMCA-of-Metropolitan-Washington-Membership-Handbook_122823.pdf @YMC_HR_DOCS_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
-
--- IT Knowledge Base documents
-PUT file:///Users/timjones/projects/coco/ymca_demo/pdfs/getting_started_with_salesforce.pdf @YMC_IT_DOCS_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
-PUT file:///Users/timjones/projects/coco/ymca_demo/pdfs/Microsoft 365 Quick Start Guide.pdf @YMC_IT_DOCS_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
-PUT file:///Users/timjones/projects/coco/ymca_demo/pdfs/zoho-desk-integration-guide-p-series-appliance-edition-en.pdf @YMC_IT_DOCS_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
-
--- SOP documents
-PUT file:///Users/timjones/projects/coco/ymca_demo/pdfs/Aquatic-Safety-Plan-Dec2018.pdf @YMC_SOP_DOCS_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
-PUT file:///Users/timjones/projects/coco/ymca_demo/pdfs/Summer_overnight_camp_info_packet.pdf @YMC_SOP_DOCS_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
-PUT file:///Users/timjones/projects/coco/ymca_demo/pdfs/SOP-for-Participation-in-Team-Events.pdf @YMC_SOP_DOCS_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
-
--- Refresh directory metadata
-ALTER STAGE YMC_HR_DOCS_STAGE REFRESH;
-ALTER STAGE YMC_IT_DOCS_STAGE REFRESH;
-ALTER STAGE YMC_SOP_DOCS_STAGE REFRESH;
 
 -- =============================================================================
 -- PARSE AND CHUNK: HR POLICY DOCUMENTS

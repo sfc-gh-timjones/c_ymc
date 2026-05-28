@@ -3,217 +3,118 @@ USE DATABASE CUSTOMER_DEMOS;
 USE SCHEMA YMC;
 USE WAREHOUSE YMC_WH;
 
+-- Semantic view DDL syntax: `table_alias.semantic_name AS column_expression`
+-- LEFT side of AS = the user-facing fact/dimension/metric name
+-- RIGHT side of AS = the physical column or SQL expression in the source table
 CREATE OR REPLACE SEMANTIC VIEW YMC_SEMANTIC_VIEW
-  COMMENT = 'YMCA of San Diego County operational analytics — IT tickets, membership, childcare, workforce, and lead pipeline'
-  DISTRIBUTION = 'ALL'
   TABLES (
-    branches AS (
-      BASE_TABLE = 'CUSTOMER_DEMOS.YMC.BRANCHES'
-      SYNONYM = 'branches'
-      PRIMARY_KEY = (BRANCH_ID)
-      DIMENSIONS (
-        BRANCH_ID COMMENT 'Unique branch identifier',
-        BRANCH_NAME COMMENT 'YMCA branch name',
-        CITY COMMENT 'City where branch is located',
-        REGION COMMENT 'Geographic region: Central, North Inland, North Coastal, East County, South, Coastal',
-        DIRECTOR_NAME COMMENT 'Name of the branch director'
-      )
-    ),
-    membership_types AS (
-      BASE_TABLE = 'CUSTOMER_DEMOS.YMC.MEMBERSHIP_TYPES'
-      SYNONYM = 'membership_types'
-      PRIMARY_KEY = (MEMBERSHIP_TYPE_ID)
-      DIMENSIONS (
-        MEMBERSHIP_TYPE_ID COMMENT 'Unique membership type identifier',
-        TYPE_NAME COMMENT 'Membership type name: Individual Adult, Couple, Family, Senior Individual, Senior Couple, Young Adult (18-25), Youth (12-17), Corporate',
-        CATEGORY COMMENT 'Membership category: Adult, Family, Senior, Young Adult, Youth, Corporate'
-      )
-      FACTS (
-        MONTHLY_FEE COMMENT 'Monthly membership fee in USD',
-        ANNUAL_FEE COMMENT 'Annual membership fee in USD'
-      )
-    ),
-    departments AS (
-      BASE_TABLE = 'CUSTOMER_DEMOS.YMC.DEPARTMENTS'
-      SYNONYM = 'departments'
-      PRIMARY_KEY = (DEPARTMENT_ID)
-      DIMENSIONS (
-        DEPARTMENT_ID COMMENT 'Unique department identifier',
-        DEPARTMENT_NAME COMMENT 'Department name: Aquatics, Youth Development, Childcare, Fitness & Wellness, Facilities & Maintenance, Information Technology, Human Resources, Finance & Accounting, Community Programs, Camp Services, Membership Services, Marketing & Communications, Development & Fundraising, Executive, Social Services',
-        DIVISION COMMENT 'Division: Programs, Operations, Administration',
-        COST_CENTER COMMENT 'Cost center code'
-      )
-    ),
-    employees AS (
-      BASE_TABLE = 'CUSTOMER_DEMOS.YMC.EMPLOYEES'
-      SYNONYM = 'employees'
-      PRIMARY_KEY = (EMPLOYEE_ID)
-      DIMENSIONS (
-        EMPLOYEE_ID COMMENT 'Unique employee identifier',
-        FIRST_NAME COMMENT 'Employee first name',
-        LAST_NAME COMMENT 'Employee last name',
-        EMAIL COMMENT 'Employee email address',
-        POSITION_TITLE COMMENT 'Job title',
-        EMPLOYMENT_TYPE COMMENT 'Employment type: Full-Time, Part-Time, Seasonal',
-        HIRE_DATE COMMENT 'Date employee was hired',
-        STATUS COMMENT 'Employee status: Active or Inactive',
-        IS_ACTIVE COMMENT 'Whether employee is currently active'
-      )
-      FACTS (
-        HOURLY_RATE COMMENT 'Hourly pay rate in USD',
-        DEPARTMENT_ID COMMENT 'FK to departments table',
-        BRANCH_ID COMMENT 'FK to branches table'
-      )
-    ),
-    members AS (
-      BASE_TABLE = 'CUSTOMER_DEMOS.YMC.MEMBERS'
-      SYNONYM = 'members'
-      PRIMARY_KEY = (MEMBER_ID)
-      DIMENSIONS (
-        MEMBER_ID COMMENT 'Unique member identifier',
-        FIRST_NAME COMMENT 'Member first name',
-        LAST_NAME COMMENT 'Member last name',
-        EMAIL COMMENT 'Member email',
-        JOIN_DATE COMMENT 'Date the member joined',
-        STATUS COMMENT 'Member status: Active, Inactive, or Frozen',
-        AGE_GROUP COMMENT 'Age group: Youth (5-12), Teen (13-17), Young Adult (18-25), Adult (26-44), Adult (45-63), Senior (64+)',
-        GENDER COMMENT 'Member gender: Male, Female, Non-binary, Prefer not to say'
-      )
-      FACTS (
-        BRANCH_ID COMMENT 'FK to branches table',
-        MEMBERSHIP_TYPE_ID COMMENT 'FK to membership_types table'
-      )
-    ),
-    leads AS (
-      BASE_TABLE = 'CUSTOMER_DEMOS.YMC.LEADS'
-      SYNONYM = 'leads'
-      PRIMARY_KEY = (LEAD_ID)
-      DIMENSIONS (
-        LEAD_ID COMMENT 'Unique lead identifier',
-        FIRST_NAME COMMENT 'Lead first name',
-        LAST_NAME COMMENT 'Lead last name',
-        SOURCE COMMENT 'Lead source: Website, Walk-In, Referral, Social Media, Community Event, Corporate Partner, Google Ads, Email Campaign',
-        CREATED_DATE COMMENT 'Date lead was created',
-        STATUS COMMENT 'Lead status: New, Contacted, Qualified, Tour Scheduled, Converted, Lost',
-        IS_CONVERTED COMMENT 'Whether lead has been converted to a member',
-        CONVERTED_DATE COMMENT 'Date lead was converted'
-      )
-      FACTS (
-        BRANCH_ID COMMENT 'FK to branches table'
-      )
-    ),
-    childcare_programs AS (
-      BASE_TABLE = 'CUSTOMER_DEMOS.YMC.CHILDCARE_PROGRAMS'
-      SYNONYM = 'childcare_programs'
-      PRIMARY_KEY = (PROGRAM_ID)
-      DIMENSIONS (
-        PROGRAM_ID COMMENT 'Unique program identifier',
-        PROGRAM_NAME COMMENT 'Childcare program name',
-        PROGRAM_TYPE COMMENT 'Program type: Before School, After School, Preschool, Full Day Care, Intersession Camp, Summer Camp',
-        SUBSIDY_ACCEPTED COMMENT 'Whether program accepts subsidy',
-        STATUS COMMENT 'Program status: Active or Waitlist Only'
-      )
-      FACTS (
-        CAPACITY COMMENT 'Maximum enrollment capacity',
-        CURRENT_ENROLLMENT COMMENT 'Current number of children enrolled',
-        AGE_MIN_MONTHS COMMENT 'Minimum age in months',
-        AGE_MAX_MONTHS COMMENT 'Maximum age in months',
-        MONTHLY_FEE COMMENT 'Monthly program fee in USD',
-        BRANCH_ID COMMENT 'FK to branches table'
-      )
-    ),
-    childcare_enrollments AS (
-      BASE_TABLE = 'CUSTOMER_DEMOS.YMC.CHILDCARE_ENROLLMENTS'
-      SYNONYM = 'childcare_enrollments'
-      PRIMARY_KEY = (ENROLLMENT_ID)
-      DIMENSIONS (
-        ENROLLMENT_ID COMMENT 'Unique enrollment identifier',
-        CHILD_FIRST_NAME COMMENT 'Child first name',
-        CHILD_LAST_NAME COMMENT 'Child last name',
-        PARENT_NAME COMMENT 'Parent or guardian name',
-        ENROLLMENT_DATE COMMENT 'Date of enrollment',
-        STATUS COMMENT 'Enrollment status: Active, Withdrawn, Waitlisted',
-        SUBSIDY_ELIGIBLE COMMENT 'Whether child is eligible for subsidy'
-      )
-      FACTS (
-        SUBSIDY_AMOUNT COMMENT 'Monthly subsidy amount in USD',
-        PROGRAM_ID COMMENT 'FK to childcare_programs table'
-      )
-    ),
-    it_tickets AS (
-      BASE_TABLE = 'CUSTOMER_DEMOS.YMC.IT_TICKETS'
-      SYNONYM = 'it_tickets'
-      PRIMARY_KEY = (TICKET_ID)
-      DIMENSIONS (
-        TICKET_ID COMMENT 'Unique ticket identifier',
-        TICKET_NUMBER COMMENT 'Display ticket number (e.g. TKT-00001)',
-        SUBJECT COMMENT 'Ticket subject/description',
-        CATEGORY COMMENT 'IT ticket category: Network/Connectivity, Software/Applications, Hardware, Account Access, Email/Calendar, Printer/Copier, Security, VPN/Remote Access, Phone/Video Conferencing, Database/Reporting',
-        SUBCATEGORY COMMENT 'Ticket subcategory: Configuration, Troubleshooting, Installation, Access Request, Replacement',
-        PRIORITY COMMENT 'Priority level: P1 (Critical), P2 (High), P3 (Medium), P4 (Low)',
-        STATUS COMMENT 'Ticket status: Open, In Progress, Awaiting User, Resolved, Closed',
-        CREATED_DATE COMMENT 'Date and time ticket was created',
-        RESOLVED_DATE COMMENT 'Date and time ticket was resolved (NULL if still open)',
-        ASSIGNED_TECHNICIAN COMMENT 'Name of assigned IT technician'
-      )
-      FACTS (
-        RESOLUTION_HOURS COMMENT 'Hours from creation to resolution',
-        SATISFACTION_SCORE COMMENT 'User satisfaction score 1-5 (5 is best)',
-        EMPLOYEE_ID COMMENT 'FK to employees table - the requestor',
-        BRANCH_ID COMMENT 'FK to branches table'
-      )
-    ),
-    onboarding_tasks AS (
-      BASE_TABLE = 'CUSTOMER_DEMOS.YMC.ONBOARDING_TASKS'
-      SYNONYM = 'onboarding_tasks'
-      PRIMARY_KEY = (TASK_ID)
-      DIMENSIONS (
-        TASK_ID COMMENT 'Unique task identifier',
-        TASK_NAME COMMENT 'Name of the onboarding task',
-        CATEGORY COMMENT 'Task category: HR & Compliance, IT Setup, Safety & Training, Operations, Benefits & Payroll',
-        DUE_DATE COMMENT 'Task due date',
-        COMPLETED_DATE COMMENT 'Date task was completed (NULL if not completed)',
-        STATUS COMMENT 'Task status: Pending, In Progress, Completed, Overdue'
-      )
-      FACTS (
-        EMPLOYEE_ID COMMENT 'FK to employees table'
-      )
-    )
+    branches         AS CUSTOMER_DEMOS.YMC.BRANCHES         PRIMARY KEY (BRANCH_ID),
+    membership_types AS CUSTOMER_DEMOS.YMC.MEMBERSHIP_TYPES PRIMARY KEY (MEMBERSHIP_TYPE_ID),
+    departments      AS CUSTOMER_DEMOS.YMC.DEPARTMENTS      PRIMARY KEY (DEPARTMENT_ID),
+    employees        AS CUSTOMER_DEMOS.YMC.EMPLOYEES        PRIMARY KEY (EMPLOYEE_ID),
+    members          AS CUSTOMER_DEMOS.YMC.MEMBERS          PRIMARY KEY (MEMBER_ID),
+    leads            AS CUSTOMER_DEMOS.YMC.LEADS            PRIMARY KEY (LEAD_ID),
+    childcare_programs     AS CUSTOMER_DEMOS.YMC.CHILDCARE_PROGRAMS     PRIMARY KEY (PROGRAM_ID),
+    childcare_enrollments  AS CUSTOMER_DEMOS.YMC.CHILDCARE_ENROLLMENTS  PRIMARY KEY (ENROLLMENT_ID),
+    it_tickets       AS CUSTOMER_DEMOS.YMC.IT_TICKETS       PRIMARY KEY (TICKET_ID),
+    onboarding_tasks AS CUSTOMER_DEMOS.YMC.ONBOARDING_TASKS PRIMARY KEY (TASK_ID)
   )
   RELATIONSHIPS (
-    employees.DEPARTMENT_ID REFERENCES departments.DEPARTMENT_ID,
-    employees.BRANCH_ID REFERENCES branches.BRANCH_ID,
-    members.BRANCH_ID REFERENCES branches.BRANCH_ID,
-    members.MEMBERSHIP_TYPE_ID REFERENCES membership_types.MEMBERSHIP_TYPE_ID,
-    leads.BRANCH_ID REFERENCES branches.BRANCH_ID,
-    childcare_programs.BRANCH_ID REFERENCES branches.BRANCH_ID,
-    childcare_enrollments.PROGRAM_ID REFERENCES childcare_programs.PROGRAM_ID,
-    it_tickets.EMPLOYEE_ID REFERENCES employees.EMPLOYEE_ID,
-    it_tickets.BRANCH_ID REFERENCES branches.BRANCH_ID,
-    onboarding_tasks.EMPLOYEE_ID REFERENCES employees.EMPLOYEE_ID
+    employees(DEPARTMENT_ID)          REFERENCES departments,
+    employees(BRANCH_ID)              REFERENCES branches,
+    members(BRANCH_ID)                REFERENCES branches,
+    members(MEMBERSHIP_TYPE_ID)       REFERENCES membership_types,
+    leads(BRANCH_ID)                  REFERENCES branches,
+    childcare_programs(BRANCH_ID)     REFERENCES branches,
+    childcare_enrollments(PROGRAM_ID) REFERENCES childcare_programs,
+    it_tickets(EMPLOYEE_ID)           REFERENCES employees,
+    it_tickets(BRANCH_ID)             REFERENCES branches,
+    onboarding_tasks(EMPLOYEE_ID)     REFERENCES employees
   )
-  AI_SQL_GENERATION = '
-    Domain: YMCA of San Diego County — nonprofit community organization with ~6,000 employees serving 144,000+ members across ~20 branches in San Diego County, California.
-
-    Fiscal year: July 1 through June 30. When users say "this year" they mean the current fiscal year.
-
-    Employment types: Full-Time, Part-Time, Seasonal. Majority of staff are Part-Time.
-
-    IT ticket priorities: P1 = Critical (4-hour SLA), P2 = High (24-hour SLA), P3 = Medium (48-hour SLA), P4 = Low (72-hour SLA).
-
-    Ticket status lifecycle: Open → In Progress → Awaiting User → Resolved → Closed.
-
-    Regions in San Diego County: Central (downtown/midcity), North Inland (Escondido, Poway, Rancho Bernardo), North Coastal (Oceanside, Encinitas, Vista), East County (La Mesa, El Cajon, Santee, Spring Valley), South (Chula Vista, National City, Imperial Beach), Coastal (Peninsula).
-
-    When asked about "open" tickets, include statuses: Open, In Progress, Awaiting User.
-    When asked about resolution time, use RESOLUTION_HOURS column.
-    When asked about new hires, look for employees with HIRE_DATE in the last 90 days.
+  FACTS (
+    membership_types.monthly_fee         AS MONTHLY_FEE,
+    membership_types.annual_fee          AS ANNUAL_FEE,
+    employees.hourly_rate                AS HOURLY_RATE,
+    childcare_programs.capacity          AS CAPACITY,
+    childcare_programs.current_enrollment AS CURRENT_ENROLLMENT,
+    childcare_programs.program_monthly_fee AS MONTHLY_FEE,
+    childcare_enrollments.subsidy_amount AS SUBSIDY_AMOUNT,
+    it_tickets.resolution_hours          AS RESOLUTION_HOURS,
+    it_tickets.satisfaction_score        AS SATISFACTION_SCORE
+  )
+  DIMENSIONS (
+    branches.branch_id       AS BRANCH_ID,
+    branches.branch_name     AS BRANCH_NAME,
+    branches.city            AS CITY,
+    branches.region          AS REGION,
+    branches.director_name   AS DIRECTOR_NAME,
+    membership_types.type_name AS TYPE_NAME,
+    membership_types.category  AS CATEGORY,
+    departments.department_id      AS DEPARTMENT_ID,
+    departments.department_name    AS DEPARTMENT_NAME,
+    departments.division           AS DIVISION,
+    employees.employee_id          AS EMPLOYEE_ID,
+    employees.first_name           AS FIRST_NAME,
+    employees.last_name            AS LAST_NAME,
+    employees.position_title       AS POSITION_TITLE,
+    employees.employment_type      AS EMPLOYMENT_TYPE,
+    employees.hire_date            AS HIRE_DATE,
+    employees.status               AS STATUS,
+    employees.is_active            AS IS_ACTIVE,
+    members.member_id              AS MEMBER_ID,
+    members.first_name             AS FIRST_NAME,
+    members.last_name              AS LAST_NAME,
+    members.join_date              AS JOIN_DATE,
+    members.status                 AS STATUS,
+    members.age_group              AS AGE_GROUP,
+    members.gender                 AS GENDER,
+    leads.lead_id                  AS LEAD_ID,
+    leads.source                   AS SOURCE,
+    leads.created_date             AS CREATED_DATE,
+    leads.status                   AS STATUS,
+    leads.is_converted             AS IS_CONVERTED,
+    childcare_programs.program_id   AS PROGRAM_ID,
+    childcare_programs.program_name AS PROGRAM_NAME,
+    childcare_programs.program_type AS PROGRAM_TYPE,
+    childcare_programs.status       AS STATUS,
+    childcare_enrollments.enrollment_id   AS ENROLLMENT_ID,
+    childcare_enrollments.enrollment_date AS ENROLLMENT_DATE,
+    childcare_enrollments.status          AS STATUS,
+    it_tickets.ticket_id           AS TICKET_ID,
+    it_tickets.ticket_number       AS TICKET_NUMBER,
+    it_tickets.subject             AS SUBJECT,
+    it_tickets.category            AS CATEGORY,
+    it_tickets.subcategory         AS SUBCATEGORY,
+    it_tickets.priority            AS PRIORITY,
+    it_tickets.status              AS STATUS,
+    it_tickets.created_date        AS CREATED_DATE,
+    it_tickets.assigned_technician AS ASSIGNED_TECHNICIAN,
+    onboarding_tasks.task_id       AS TASK_ID,
+    onboarding_tasks.task_name     AS TASK_NAME,
+    onboarding_tasks.category      AS CATEGORY,
+    onboarding_tasks.due_date      AS DUE_DATE,
+    onboarding_tasks.status        AS STATUS
+  )
+  METRICS (
+    it_tickets.avg_resolution_hours AS AVG(it_tickets.RESOLUTION_HOURS),
+    it_tickets.avg_satisfaction     AS AVG(it_tickets.SATISFACTION_SCORE),
+    members.total_members           AS COUNT(members.MEMBER_ID),
+    employees.total_employees       AS COUNT(employees.EMPLOYEE_ID),
+    childcare_enrollments.total_enrollments AS COUNT(childcare_enrollments.ENROLLMENT_ID)
+  )
+  COMMENT = 'YMCA of San Diego County operational analytics — IT tickets, membership, childcare, workforce, and lead pipeline'
+  AI_SQL_GENERATION '
+    Domain: YMCA of San Diego County — nonprofit, ~6,000 employees, 144,000+ members, ~20 San Diego County branches.
+    Fiscal year: July 1 through June 30.
+    IT ticket priorities: P1=Critical, P2=High, P3=Medium, P4=Low.
+    Open tickets include statuses: Open, In Progress, Awaiting User.
+    New hires: HIRE_DATE in last 90 days.
   '
-  AI_QUESTION_CATEGORIZATION = '
-    Route questions about HR policies, PTO, benefits, employee handbook, code of conduct, leave of absence, payroll, direct deposit → HRPolicySearch tool.
-    Route questions about IT troubleshooting steps, how to reset password, VPN setup, software installation, printer fix, hardware setup → ITKnowledgeBaseSearch tool.
-    Route questions about childcare ratios, aquatics safety, camp procedures, emergency protocols, member check-in SOPs, program standards → SOPSearch tool.
-    All quantitative questions about ticket counts, resolution times, member numbers, enrollment, headcount, conversion rates, revenue → use this semantic view.
+  AI_QUESTION_CATEGORIZATION '
+    HR policies, PTO, benefits → HRPolicySearch tool.
+    IT troubleshooting, password reset, VPN → ITKnowledgeBaseSearch tool.
+    Childcare ratios, aquatics safety, camp procedures → SOPSearch tool.
+    Quantitative questions about tickets, members, enrollment, headcount, revenue → use this semantic view.
   '
   AI_VERIFIED_QUERIES (
     open_tickets_by_priority AS (
