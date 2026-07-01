@@ -139,7 +139,7 @@ CREATE OR REPLACE AGENT CUSTOMER_DEMOS.YMC.YMC_AGENT
       semantic_view: "CUSTOMER_DEMOS.YMC.YMC_SEMANTIC_VIEW"
       execution_environment:
         type: "warehouse"
-        warehouse: "YMC_WH"
+        warehouse: "WH_XS"
 
     HRPolicySearch:
       name: "CUSTOMER_DEMOS.YMC.YMC_HR_POLICY_SEARCH"
